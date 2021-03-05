@@ -44,7 +44,7 @@ function generate_geometry(surface, time) {
     for (const y of y_discretized_interval) {
       var pos = vec3(x, y, 1.0);
       var pos2 = vec3(pos);
-      var morph = Math.sin(0.85*time) * 2.8 + 2.15;
+      var morph = -Math.abs(1.6 * (time % 7.5) - 6) + 5;
       vertices.push(mix(pos, normalize(pos2), morph)); 
     }
   }
