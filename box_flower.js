@@ -75,19 +75,34 @@ class Material {
 }
 
 var materials = {
-  emerald: new Material(
-    vec4(0.8, 0.8, 1.0, 0.8),
-    vec4(0.3, 0.8, 0.6, 1.0),
+  cyan: new Material(
+    vec4(0.0, 1.0, 1.0, 1.0),
+    vec4(0.0, 1.0, 1.0, 1.0),
     vec4(1.0, 1.0, 1.0, 1.0)
   ),
-  lavender: new Material(
-    vec4(0.6, 0.2, 0.19, 1.0),
-    vec4(0.7, 0.5, 0.8, 1.0),
-    vec4(0.62, 0.55, 0.37, 1.0)
+  magenta: new Material(
+    vec4(1.0, 0.0, 1.0, 1.0),
+    vec4(1.0, 0.0, 1.0, 1.0),
+    vec4(1.0, 1.0, 1.0, 1.0)
   ),
-  cyan: new Material(
-    vec4(0.0, 0.1, 1.0, 1.0),
-    vec4(0.0, 1.0, 1.0, 1.0),
+  yellow: new Material(
+    vec4(1.0, 1.0, 0.0, 1.0),
+    vec4(1.0, 1.0, 0.0, 1.0),
+    vec4(1.0, 1.0, 1.0, 1.0)
+  ),
+  red: new Material(
+    vec4(1.0, 0.0, 0.0, 1.0),
+    vec4(1.0, 0.0, 0.0, 1.0),
+    vec4(1.0, 1.0, 1.0, 1.0)
+  ),
+  green: new Material(
+    vec4(0.0, 1.0, 0.0, 1.0),
+    vec4(0.0, 1.0, 0.0, 1.0),
+    vec4(1.0, 1.0, 1.0, 1.0)
+  ),
+  blue: new Material(
+    vec4(0.0, 0.0, 1.0, 1.0),
+    vec4(0.0, 0.0, 1.0, 1.0),
     vec4(1.0, 1.0, 1.0, 1.0)
   )
 };
@@ -99,23 +114,23 @@ var faces = {
   },
   back: {
     orientation: [0, 180],
-    material: 'emerald'
+    material: 'yellow'
   },
   left: {
     orientation: [0, 270],
-    material: 'lavender'
+    material: 'blue'
   },
   right: {
     orientation: [0, 180],
-    material: 'lavender'
+    material: 'magenta'
   },
   top: {
     orientation: [90, 0],
-    material: 'emerald'
+    material: 'red'
   },
   bottom: {
     orientation: [180, 0],
-    material: 'lavender'
+    material: 'green'
   }
 }
 
@@ -152,7 +167,7 @@ window.onload = function init() {
   if (!gl) { alert("WebGL isn't available"); }
 
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(0.98, 0.89, 0.85, 1.0);
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
   gl.enable(gl.DEPTH_TEST);
 
