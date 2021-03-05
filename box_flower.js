@@ -84,22 +84,39 @@ var materials = {
     vec4(0.6, 0.2, 0.19, 1.0),
     vec4(0.7, 0.5, 0.8, 1.0),
     vec4(0.62, 0.55, 0.37, 1.0)
+  ),
+  cyan: new Material(
+    vec4(0.0, 0.1, 1.0, 1.0),
+    vec4(0.0, 1.0, 1.0, 1.0),
+    vec4(1.0, 1.0, 1.0, 1.0)
   )
 };
 
 var faces = {
   front: {
     orientation: [0, 0],
-    material: 'emerald'
+    material: 'cyan'
   },
   back: {
     orientation: [0, 180],
+    material: 'emerald'
+  },
+  left: {
+    orientation: [0, 270],
     material: 'lavender'
   },
-  //left: [0, -Math.PI / 2],
-  //right: [0, Math.PI / 2],
-  //top: [Math.PI / 2, 0],
-  //bottom: [-Math.PI / 2, 0]
+  right: {
+    orientation: [0, 180],
+    material: 'lavender'
+  },
+  top: {
+    orientation: [90, 0],
+    material: 'emerald'
+  },
+  bottom: {
+    orientation: [180, 0],
+    material: 'lavender'
+  }
 }
 
 // mouse interaction
@@ -182,7 +199,6 @@ window.onload = function init() {
   document.getElementById("eye-button").onclick = function () {
     console.log("pressed eye");
     lights['white'].position = vec4(0.0, 0.0, 0.0, 1.0);
-    lights['blue'].position = vec4(0.0, 0.0, 0.0, 1.0);
   };
 
   document.getElementById("offput-button").onclick = function () {

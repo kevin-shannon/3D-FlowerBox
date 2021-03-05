@@ -8,57 +8,63 @@
   	<!-- Lighting calculations are done in eye coordinates  -->
 
   	<script id="vertex-shader1" type="x-shader/x-vertex">
-      attribute vec3 a_vertexPosition;
-      attribute vec4 a_vertexNormal;
-      attribute vec4 a_vp;
+		attribute vec3 a_vertexPosition;
+		attribute vec4 a_vertexNormal;
+		attribute vec4 a_vp;
 
-  		uniform vec4 u_lightPosition;
-  		uniform vec4 u_ambientProduct;
-  		uniform vec4 u_diffuseProduct;
-  		uniform vec4 u_specularProduct;
-  		uniform float u_shininess;
+		uniform vec4 u_lightPosition;
+		uniform vec4 u_ambientProduct;
+		uniform vec4 u_diffuseProduct;
+		uniform vec4 u_specularProduct;
+		uniform float u_shininess;
 
-      uniform mat4 u_mvMatrix;
-  		uniform mat4 u_projMatrix;
-     
-      varying vec4 fColor;
+		uniform mat4 u_mvMatrix;
+		uniform mat4 u_projMatrix;
+		
+		varying vec4 frontColor;
+		varying vec4 backColor;
 
-  		void main() {
-        vec3 eye = vec3(0.0, 0.0, 0.0);
-  		  vec3 position = (u_mvMatrix * vec4(a_vertexPosition, 1.0)).xyz;
-  		  vec3 light = u_lightPosition.xyz;
-  		  vec3 L = normalize(light - position);
-  		  vec3 E = normalize(eye - position);
-  		  vec3 H = normalize(L + E);
-  		  vec3 N = normalize((u_mvMatrix * a_vertexNormal).xyz);
+		void main() {
+			vec3 eye = vec3(0.0, 0.0, 0.0);
+			vec3 position = (u_mvMatrix * vec4(a_vertexPosition, 1.0)).xyz;
+			vec3 light = u_lightPosition.xyz;
+			vec3 L = normalize(light - position);
+			vec3 E = normalize(eye - position);
+			vec3 H = normalize(L + E);
+			vec3 N = normalize((u_mvMatrix * a_vertexNormal).xyz);
 
-  		  // Compute lighting
-  		  vec4 ambient = u_ambientProduct;
+			// Compute lighting
+			vec4 ambient = u_ambientProduct;
 
-  		  float Kd = max(dot(L, N), 0.0);
-  		  vec4 diffuse = Kd * u_diffuseProduct;
+			float Kd = max(dot(L, N), 0.0);
+			vec4 diffuse = Kd * u_diffuseProduct;
 
-  		  float Ks = pow(max(dot(N, H), 0.0), u_shininess);
-  			vec4 specular = u_specularProduct * Ks;
+			float Ks = pow(max(dot(N, H), 0.0), u_shininess);
+			vec4 specular = u_specularProduct * Ks;
 
-  		  // No specular highlighting on the back
-        if(dot(L, N) < 0.0) {
-  		      specular = vec4(0.0, 0.0, 0.0, 1.0);
-  		  }
+			gl_Position = u_projMatrix * u_mvMatrix * vec4(a_vertexPosition, 1.0);
 
-        gl_Position = u_projMatrix * u_mvMatrix * vec4(a_vertexPosition, 1.0);
+			frontColor = ambient + diffuse + specular;
+			frontColor.a = 1.0;
 
-        fColor = ambient + diffuse + specular;
-  		  fColor.a = 1.0;
-  		}
+			float Kdb = max(dot(L, -N), 0.0);
+			vec4 diffuseb = Kdb * u_diffuseProduct;
+			backColor = ambient + diffuseb + specular;
+		}
   	</script>
 
   	<script id="fragment-shader" type="x-shader/x-fragment">
   		precision mediump float;
-  		varying vec4 fColor;
+  		varying vec4 frontColor;
+		varying vec4 backColor;
 
   		void main() {
-  		  gl_FragColor = fColor;
+  		  	if (!gl_FrontFacing) {
+				gl_FragColor = frontColor;
+			}
+			else {
+				gl_FragColor = backColor;
+			}
   		}
   	</script>
 
