@@ -59,12 +59,6 @@ var lights = {
     vec4(0.2, 0.2, 0.2, 1.0),
     vec4(0.9, 0.9, 0.9, 1.0),
     vec4(0.5, 0.5, 0.5, 1.0)
-  ),
-  'blue': new Light(
-    vec4(-1.0, 2.0, -1.0, 1.0),
-    vec4(0.2, 0.2, 0.2, 1.0),
-    vec4(0.5, 0.5, 0.9, 1.0),
-    vec4(0.5, 0.5, 0.8, 1.0)
   )
 };
 
@@ -81,17 +75,32 @@ class Material {
 }
 
 var materials = {
-  'emerald': new Material(
+  emerald: new Material(
     vec4(0.8, 0.8, 1.0, 0.8),
     vec4(0.3, 0.8, 0.6, 1.0),
     vec4(1.0, 1.0, 1.0, 1.0)
   ),
-  'lavender': new Material(
+  lavender: new Material(
     vec4(0.6, 0.2, 0.19, 1.0),
     vec4(0.7, 0.5, 0.8, 1.0),
     vec4(0.62, 0.55, 0.37, 1.0)
   )
 };
+
+var faces = {
+  front: {
+    orientation: [0, 0],
+    material: 'emerald'
+  },
+  back: {
+    orientation: [0, 180],
+    material: 'lavender'
+  },
+  //left: [0, -Math.PI / 2],
+  //right: [0, Math.PI / 2],
+  //top: [Math.PI / 2, 0],
+  //bottom: [-Math.PI / 2, 0]
+}
 
 // mouse interaction
 var mouse = {
@@ -101,26 +110,12 @@ var mouse = {
   rightDown: false,
 };
 
-var shapes;
-var active_shape;
-class ShapeAttrs {
-  constructor(indexStart, surface, material) {
-    this.indexStart = indexStart;
-    this.material = material;
-    this.surface = surface;
-  }
-}
+var shape;
 
-function load_shapes(surfaces) {
-  shapes = {};
-  var indexStart = 0;
-  for (let [key, surface] of Object.entries(surfaces)) {
-    generate_geometry(surface, 4.0);
-    generate_indices(surface);
-    shapes[key] = new ShapeAttrs(indexStart, surface, materials['emerald']);
-    shapes[key].indexStart = indexStart
-    indexStart += surface.numIndices;
-  }
+function load_shape(surface) {
+  generate_geometry(surface, time);
+  generate_indices(surface);
+  shape = surface;
 }
 
 var program;
@@ -145,7 +140,7 @@ window.onload = function init() {
   gl.enable(gl.DEPTH_TEST);
 
   // Create the geometry and load into GPU structures,
-  load_shapes({'square': square})
+  load_shape(square)
 
   program = initShaders(gl, "vertex-shader1", "fragment-shader");
   gl.useProgram(program);
@@ -182,37 +177,7 @@ window.onload = function init() {
   u_specularProduct = gl.getUniformLocation(program, "u_specularProduct");
   u_shininess = gl.getUniformLocation(program, "u_shininess");
 
-  active_shape = shapes['square'];
-
-  document.getElementById("cylinder-button").onclick = function () {
-    console.log("pressed cylinder");
-    active_shape = shapes['cylinder'];
-  };
-
-  document.getElementById("torus-button").onclick = function () {
-    console.log("pressed torus");
-    active_shape = shapes['torus'];
-  };
-
-  document.getElementById("emerald-button").onclick = function () {
-    console.log("pressed emerald");
-    active_shape.material = materials['emerald'];
-  };
-
-  document.getElementById("lavender-button").onclick = function () {
-    console.log("pressed lavender");
-    active_shape.material = materials['lavender'];
-  };
-
-  document.getElementById("white-button").onclick = function () {
-    console.log("pressed white");
-    light = lights['white'];
-  };
-
-  document.getElementById("blue-button").onclick = function () {
-    console.log("pressed blue");
-    light = lights['blue'];
-  };
+  shape = square;
 
   document.getElementById("eye-button").onclick = function () {
     console.log("pressed eye");
@@ -335,7 +300,7 @@ var render = function() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   time += 0.01
-  generate_geometry(active_shape.surface, time);
+  generate_geometry(shape, time);
 
   // vertex buffer
   gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
@@ -353,19 +318,26 @@ var render = function() {
 
   pjMatrix = perspective(perspProj.fov, perspProj.aspect, perspProj.near, perspProj.far);
   gl.uniformMatrix4fv(u_projMatrix, false, flatten(pjMatrix));
+
   mvMatrix = lookAt(viewer.eye, viewer.at, viewer.up);
-  gl.uniformMatrix4fv(u_mvMatrix, false, flatten(mvMatrix));
-
-  ambientProduct = mult(light.ambient, active_shape.material.ambient);
-  diffuseProduct = mult(light.diffuse, active_shape.material.diffuse);
-  specularProduct = mult(light.specular, active_shape.material.specular);
-
-  gl.uniform4fv(u_lightPosition, flatten(light.position));
-  gl.uniform4fv(u_ambientProduct, flatten(ambientProduct));
-  gl.uniform4fv(u_diffuseProduct, flatten(diffuseProduct));
-  gl.uniform4fv(u_specularProduct, flatten(specularProduct));
-  gl.uniform1f(u_shininess, shininess);
-
-  gl.drawElements(gl.TRIANGLES, active_shape.surface.numIndices, gl.UNSIGNED_INT, active_shape.indexStart*4);
+  for (face in faces) {
+    // Orientate Face
+    mvMatrix = mult(mvMatrix, rotateX(faces[face].orientation[0]));
+    mvMatrix = mult(mvMatrix, rotateY(faces[face].orientation[1]));
+    gl.uniformMatrix4fv(u_mvMatrix, false, flatten(mvMatrix));
+  
+    // Lights
+    ambientProduct = mult(light.ambient, materials[faces[face].material].ambient);
+    diffuseProduct = mult(light.diffuse, materials[faces[face].material].diffuse);
+    specularProduct = mult(light.specular, materials[faces[face].material].specular);
+  
+    gl.uniform4fv(u_lightPosition, flatten(light.position));
+    gl.uniform4fv(u_ambientProduct, flatten(ambientProduct));
+    gl.uniform4fv(u_diffuseProduct, flatten(diffuseProduct));
+    gl.uniform4fv(u_specularProduct, flatten(specularProduct));
+    gl.uniform1f(u_shininess, shininess);
+  
+    gl.drawElements(gl.TRIANGLES, shape.numIndices, gl.UNSIGNED_INT, 0);
+  }
   requestAnimFrame(render);
 }
