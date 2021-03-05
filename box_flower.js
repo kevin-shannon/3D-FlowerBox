@@ -118,11 +118,11 @@ var faces = {
   },
   left: {
     orientation: [0, 270],
-    material: 'blue'
+    material: 'magenta'
   },
   right: {
     orientation: [0, 180],
-    material: 'magenta'
+    material: 'blue'
   },
   top: {
     orientation: [90, 0],
@@ -176,6 +176,9 @@ window.onload = function init() {
 
   program = initShaders(gl, "vertex-shader1", "fragment-shader");
   gl.useProgram(program);
+
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.FRONT);
 
   // array element buffer
   iBuffer = gl.createBuffer();
