@@ -53,18 +53,15 @@ class Light {
   }
 }
 
-var lights = {
-  'white': new Light(
-    vec4(-1.0, 2.0, -1.0, 1.0),
-    vec4(0.2, 0.2, 0.2, 1.0),
-    vec4(0.9, 0.9, 0.9, 1.0),
-    vec4(0.5, 0.5, 0.5, 1.0)
-  )
-};
+var light = new Light(
+  vec4(0.0, 0.0, 0.0, 1.0),
+  vec4(0.2, 0.2, 0.2, 1.0),
+  vec4(0.9, 0.9, 0.9, 1.0),
+  vec4(0.5, 0.5, 0.5, 1.0)
+);
 
-var light = lights['white'];
 var shininess = 50;
-var time = 4;
+var time = 0.625;
 
 class Material {
   constructor(ambient, diffuse, specular) {
@@ -112,16 +109,16 @@ var faces = {
     orientation: [0, 0],
     material: 'cyan'
   },
-  back: {
-    orientation: [0, 180],
-    material: 'yellow'
-  },
   left: {
-    orientation: [0, 270],
+    orientation: [0, 90],
     material: 'magenta'
   },
+  back: {
+    orientation: [0, 90],
+    material: 'yellow'
+  },
   right: {
-    orientation: [0, 180],
+    orientation: [0, 90],
     material: 'blue'
   },
   top: {
@@ -213,17 +210,6 @@ window.onload = function init() {
   u_shininess = gl.getUniformLocation(program, "u_shininess");
 
   shape = square;
-
-  document.getElementById("eye-button").onclick = function () {
-    console.log("pressed eye");
-    lights['white'].position = vec4(0.0, 0.0, 0.0, 1.0);
-  };
-
-  document.getElementById("offput-button").onclick = function () {
-    console.log("pressed offput");
-    lights['white'].position = vec4(-1.0, 2.0, -1.0, 1.0);
-    lights['blue'].position = vec4(-1.0, 2.0, -1.0, 1.0);
-  };
 
   document.getElementById("fov-slider").onchange = function() {
     perspProj.fov = event.srcElement.value;
@@ -354,6 +340,7 @@ var render = function() {
   gl.uniformMatrix4fv(u_projMatrix, false, flatten(pjMatrix));
 
   mvMatrix = lookAt(viewer.eye, viewer.at, viewer.up);
+  mvMatrix = mult(mvMatrix, scalem(0.5, 0.5, 0.5));
   for (face in faces) {
     // Orientate Face
     mvMatrix = mult(mvMatrix, rotateX(faces[face].orientation[0]));
