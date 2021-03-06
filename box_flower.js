@@ -36,8 +36,6 @@ var projMatrix;
 var u_projMatrix;
 
 // Light properties
-// You determine if light defined in world or eye coords
-// Check vertex shader: apply modelview to light or not?
 class Light {
   constructor(position, ambient, diffuse, specular) {
     this.position = position;
@@ -54,8 +52,14 @@ var light = new Light(
   vec4(0.5, 0.5, 0.5, 1.0)
 );
 
+// Magic Variables
 var shininess = 30;
 var time = 0.625;
+var delta_t = 0.0232;
+var sz = 0.6;
+var pos = [0, 0];
+var speed_x = -0.012;
+var speed_y = 0.012;
 
 class Material {
   constructor(ambient, diffuse, specular) {
@@ -108,11 +112,11 @@ var faces = {
     material: 'magenta'
   },
   back: {
-    orientation: [0, 90],
+    orientation: [0, 180],
     material: 'yellow'
   },
   right: {
-    orientation: [0, 90],
+    orientation: [0, 270],
     material: 'blue'
   },
   top: {
@@ -120,18 +124,10 @@ var faces = {
     material: 'red'
   },
   bottom: {
-    orientation: [180, 0],
+    orientation: [270, 0],
     material: 'green'
   }
 }
-
-// mouse interaction
-var mouse = {
-  prevX: 0,
-  prevY: 0,
-  leftDown: false,
-  rightDown: false,
-};
 
 var shape;
 var aspect_ratio;
@@ -205,15 +201,23 @@ window.onload = function init() {
   u_specularProduct = gl.getUniformLocation(program, "u_specularProduct");
   u_shininess = gl.getUniformLocation(program, "u_shininess");
 
-  // Render
   render();
 }
 
 var render = function() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  var sz = .6
-  time += 0.0232
+  time += delta_t
+  pos[0] += speed_x
+  pos[1] += speed_y
+
+  if (Math.abs(pos[0]) > 2.1) {
+    speed_x = -speed_x;
+  }
+  if (Math.abs(pos[1]) > 1.75) {
+    speed_y = -speed_y;
+  }
+  
   generate_geometry(shape, time);
 
   // vertex buffer
@@ -233,14 +237,16 @@ var render = function() {
   pjMatrix = perspective(perspProj.fov, perspProj.aspect, perspProj.near, perspProj.far);
   gl.uniformMatrix4fv(u_projMatrix, false, flatten(pjMatrix));
 
-  mvMatrix = lookAt(viewer.eye, viewer.at, viewer.up);
-  mvMatrix = mult(mvMatrix, scalem(sz/aspect_ratio, sz, sz));
-  mvMatrix = mult(mvMatrix, rotateY(50*time));
-  mvMatrix = mult(mvMatrix, rotateZ(50*time));
+  var mvFoundation = lookAt(viewer.eye, viewer.at, viewer.up);
+  mvFoundation = mult(mvFoundation, scalem(sz/aspect_ratio, sz, sz));
+  mvFoundation = mult(mvFoundation, rotateY(50*time));
+  mvFoundation = mult(mvFoundation, rotateZ(50*time));
   for (face in faces) {
     // Orientate Face
-    mvMatrix = mult(mvMatrix, rotateX(faces[face].orientation[0]));
+    mvMatrix = mult(mvFoundation, rotateX(faces[face].orientation[0]));
     mvMatrix = mult(mvMatrix, rotateY(faces[face].orientation[1]));
+    mvMatrix = mult(translate(pos[0], pos[1], 0), mvMatrix);
+    
     gl.uniformMatrix4fv(u_mvMatrix, false, flatten(mvMatrix));
   
     // Lights
