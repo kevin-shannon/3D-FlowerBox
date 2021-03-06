@@ -1,4 +1,5 @@
-// Kevin Shannon
+// Author: Kevin Shannon
+// This file generates arrays for indicies, normals, and vertices.
 
 var indices = [];
 var normals = [];
@@ -14,11 +15,6 @@ class Surface {
     this.y_divisions = y_divisions;
     this.numIndices = (x_divisions-1) * (y_divisions-1) * 6;
   }
-}
-
-function derivative(f) {
-   var h = 0.001;
-   return function(x) { return (f(x + h) - f(x - h)) / (2 * h); };
 }
 
 var square = new Surface(-1, 1, -1, 1, 13, 13)
@@ -59,6 +55,7 @@ function generate_geometry(surface, time) {
       var vjprev = vertices[(i-1)*surface.y_divisions + j];
       var vjnext = vertices[(i+1)*surface.y_divisions + j];
 
+      // Find Partials
       if (j % surface.x_divisions === 0) {
         partial_x = subtract(vinext, v);
       } else if ((j+1) % surface.x_divisions === 0) {
@@ -73,6 +70,7 @@ function generate_geometry(surface, time) {
       } else {
         partial_y = add(subtract(vjnext, v), subtract(v, vjprev));
       }
+
       // Cross Partials for Normal
       normals.push(vec4(normalize(cross(partial_y, partial_x)), 0.0));
     }
@@ -82,6 +80,7 @@ function generate_geometry(surface, time) {
 function generate_indices(surface) {
   for (var i = 0; i < surface.x_divisions-1; i++) {
     for (var j = 0; j < surface.y_divisions-1; j++) {
+      // A square is made from an upper and lower triangle
       a = i*surface.x_divisions + j;
       b = i*surface.x_divisions + j + 1;
       c = (i+1)*surface.x_divisions + j + 1;
