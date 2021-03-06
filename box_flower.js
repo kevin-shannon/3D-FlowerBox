@@ -1,5 +1,4 @@
 // Kevin Shannon
-
 var canvas;
 var gl;
 
@@ -20,11 +19,6 @@ var viewer = {
   eye: vec3(0.0, 0.0, 5.0),
   at:  vec3(0.0, 0.0, 0.0),
   up:  vec3(0.0, 1.0, 0.0),
-
-  // for moving around object
-  radius: 5,
-  theta: 0,
-  phi: 0
 };
 
 var perspProj = {
@@ -60,7 +54,7 @@ var light = new Light(
   vec4(0.5, 0.5, 0.5, 1.0)
 );
 
-var shininess = 50;
+var shininess = 30;
 var time = 0.625;
 
 class Material {
@@ -140,12 +134,7 @@ var mouse = {
 };
 
 var shape;
-
-function load_shape(surface) {
-  generate_geometry(surface, time);
-  generate_indices(surface);
-  shape = surface;
-}
+var aspect_ratio;
 
 var program;
 var vBuffer;
@@ -163,13 +152,20 @@ window.onload = function init() {
   const ext = gl.getExtension('OES_element_index_uint');
   if (!gl) { alert("WebGL isn't available"); }
 
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  aspect_ratio = canvas.width / canvas.height;
+
   gl.viewport(0, 0, canvas.width, canvas.height);
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
   gl.enable(gl.DEPTH_TEST);
 
   // Create the geometry and load into GPU structures,
-  load_shape(square)
+  generate_geometry(square, time);
+  generate_indices(square);
+  shape = square;
 
   program = initShaders(gl, "vertex-shader1", "fragment-shader");
   gl.useProgram(program);
@@ -209,104 +205,6 @@ window.onload = function init() {
   u_specularProduct = gl.getUniformLocation(program, "u_specularProduct");
   u_shininess = gl.getUniformLocation(program, "u_shininess");
 
-  shape = square;
-
-  document.getElementById("gl-canvas").onmousedown = function (event) {
-    if(event.button == 0 && !mouse.leftDown) {
-      mouse.leftDown = true;
-      mouse.prevX = event.clientX;
-      mouse.prevY = event.clientY;
-    }
-    else if (event.button == 2 && !mouse.rightDown) {
-      mouse.rightDown = true;
-      mouse.prevX = event.clientX;
-      mouse.prevY = event.clientY;
-    }
-  };
-
-  document.getElementById("gl-canvas").onmouseup = function (event) {
-    // Mouse is now up
-    if (event.button == 0)
-      mouse.leftDown = false;
-    else if(event.button == 2)
-      mouse.rightDown = false;
-  };
-
-  document.getElementById("gl-canvas").onmouseleave = function () {
-    // Mouse is now up
-    mouse.leftDown = false;
-    mouse.rightDown = false;
-  };
-
-  document.getElementById("gl-canvas").onmousemove = function (event) {
-    // Get changes in x and y
-    var currentX = event.clientX;
-    var currentY = event.clientY;
-
-    var deltaX = event.clientX - mouse.prevX;
-    var deltaY = event.clientY - mouse.prevY;
-
-    var makeChange = 0;
-    // Only perform actions if the mouse is down
-    // Compute camera rotation on left click and drag
-    if (mouse.leftDown) {
-      makeChange = 1;
-
-      // Perform rotation of the camera
-      if (viewer.up[1] > 0) {
-        viewer.theta -= 0.01 * deltaX;
-        viewer.phi -= 0.01 * deltaY;
-      }
-      else {
-        viewer.theta += 0.01 * deltaX;
-        viewer.phi -= 0.01 * deltaY;
-      }
-
-      // Wrap the angles
-      var twoPi = 6.28318530718;
-      if (viewer.theta > twoPi)
-        viewer.theta -= twoPi;
-      else if (viewer.theta < 0)
-        viewer.theta += twoPi;
-
-      if (viewer.phi > twoPi)
-        viewer.phi -= twoPi;
-      else if (viewer.phi < 0)
-        viewer.phi += twoPi;
-    }
-    else if(mouse.rightDown) {
-      makeChange = 1;
-      // Perform zooming
-      viewer.radius -= 0.01 * deltaX;
-      viewer.radius = Math.max(0.1, viewer.radius);
-    }
-
-    if(makeChange == 1) {
-      // Recompute eye and up for camera
-      var threePiOver2 = 4.71238898;
-      var piOver2 = 1.57079632679;
-
-      var r = viewer.radius * Math.sin(viewer.phi + piOver2);
-      viewer.eye = vec3(r * Math.cos(viewer.theta + piOver2), viewer.radius * Math.cos(viewer.phi + piOver2), r * Math.sin(viewer.theta + piOver2));
-
-      // add vector (at - origin) to move
-      for(k=0; k<3; k++)
-        viewer.eye[k] = viewer.eye[k] + viewer.at[k];
-
-      if (viewer.phi < piOver2 || viewer.phi > threePiOver2)
-        viewer.up = vec3(0.0, 1.0, 0.0);
-      else
-        viewer.up = vec3(0.0, -1.0, 0.0);
-
-      mouse.prevX = currentX;
-      mouse.prevY = currentY;
-    }
-  }
-  // console info
-  console.log('viewer initial parameters: ', viewer);
-  console.log('perspective initial arguments: ', perspProj);
-  console.log('initial light attributes: ', light);
-
   // Render
   render();
 }
@@ -314,7 +212,8 @@ window.onload = function init() {
 var render = function() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  time += 0.01
+  var sz = .6
+  time += 0.0232
   generate_geometry(shape, time);
 
   // vertex buffer
@@ -335,7 +234,7 @@ var render = function() {
   gl.uniformMatrix4fv(u_projMatrix, false, flatten(pjMatrix));
 
   mvMatrix = lookAt(viewer.eye, viewer.at, viewer.up);
-  mvMatrix = mult(mvMatrix, scalem(0.7, 0.7, 0.7));
+  mvMatrix = mult(mvMatrix, scalem(sz/aspect_ratio, sz, sz));
   mvMatrix = mult(mvMatrix, rotateY(50*time));
   mvMatrix = mult(mvMatrix, rotateZ(50*time));
   for (face in faces) {
