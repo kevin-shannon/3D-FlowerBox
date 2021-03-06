@@ -211,11 +211,6 @@ window.onload = function init() {
 
   shape = square;
 
-  document.getElementById("fov-slider").onchange = function() {
-    perspProj.fov = event.srcElement.value;
-    console.log("fov = ", perspProj.fov);
-  };
-
   document.getElementById("gl-canvas").onmousedown = function (event) {
     if(event.button == 0 && !mouse.leftDown) {
       mouse.leftDown = true;
@@ -340,7 +335,9 @@ var render = function() {
   gl.uniformMatrix4fv(u_projMatrix, false, flatten(pjMatrix));
 
   mvMatrix = lookAt(viewer.eye, viewer.at, viewer.up);
-  mvMatrix = mult(mvMatrix, scalem(0.5, 0.5, 0.5));
+  mvMatrix = mult(mvMatrix, scalem(0.7, 0.7, 0.7));
+  mvMatrix = mult(mvMatrix, rotateY(50*time));
+  mvMatrix = mult(mvMatrix, rotateZ(50*time));
   for (face in faces) {
     // Orientate Face
     mvMatrix = mult(mvMatrix, rotateX(faces[face].orientation[0]));

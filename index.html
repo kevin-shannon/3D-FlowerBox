@@ -1,90 +1,69 @@
 <!DOCTYPE html>
 <html>
-  <head>
-  	<!-- **************************************************************** -->
-  	<!-- ***************  SHADERS  ************************************** -->
+	<head>
+		<!-- SHADERS -->
 
-  	<!-- Vertex shader 1: lighting calculations -->
-  	<!-- Lighting calculations are done in eye coordinates  -->
+		<!-- Vertex shader 1: lighting calculations -->
+		<!-- Lighting calculations are done in eye coordinates  -->
+		<script id="vertex-shader1" type="x-shader/x-vertex">
+			attribute vec3 a_vertexPosition;
+			attribute vec4 a_vertexNormal;
+			attribute vec4 a_vp;
 
-  	<script id="vertex-shader1" type="x-shader/x-vertex">
-		attribute vec3 a_vertexPosition;
-		attribute vec4 a_vertexNormal;
-		attribute vec4 a_vp;
+			uniform vec4 u_lightPosition;
+			uniform vec4 u_ambientProduct;
+			uniform vec4 u_diffuseProduct;
+			uniform vec4 u_specularProduct;
+			uniform float u_shininess;
 
-		uniform vec4 u_lightPosition;
-		uniform vec4 u_ambientProduct;
-		uniform vec4 u_diffuseProduct;
-		uniform vec4 u_specularProduct;
-		uniform float u_shininess;
+			uniform mat4 u_mvMatrix;
+			uniform mat4 u_projMatrix;
+			
+			varying vec4 fColor;
 
-		uniform mat4 u_mvMatrix;
-		uniform mat4 u_projMatrix;
-		
-		varying vec4 frontColor;
-		varying vec4 backColor;
+			void main() {
+				vec3 eye = vec3(0.0, 0.0, 0.0);
+				vec3 position = (u_mvMatrix * vec4(a_vertexPosition, 1.0)).xyz;
+				vec3 light = u_lightPosition.xyz;
+				vec3 L = normalize(light - position);
+				vec3 E = normalize(eye - position);
+				vec3 H = normalize(L + E);
+				vec3 N = normalize((u_mvMatrix * a_vertexNormal).xyz);
 
-		void main() {
-			vec3 eye = vec3(0.0, 0.0, 0.0);
-			vec3 position = (u_mvMatrix * vec4(a_vertexPosition, 1.0)).xyz;
-			vec3 light = u_lightPosition.xyz;
-			vec3 L = normalize(light - position);
-			vec3 E = normalize(eye - position);
-			vec3 H = normalize(L + E);
-			vec3 N = normalize((u_mvMatrix * a_vertexNormal).xyz);
+				vec4 ambient = u_ambientProduct;
 
-			// Compute lighting
-			vec4 ambient = u_ambientProduct;
+				float Kd = max(dot(L, N), 0.0);
+				vec4 diffuse = Kd * u_diffuseProduct;
 
-			float Kd = max(dot(L, N), 0.0);
-			vec4 diffuse = Kd * u_diffuseProduct;
+				float Ks = pow(max(dot(N, H), 0.0), u_shininess);
+				vec4 specular = u_specularProduct * Ks;
 
-			float Ks = pow(max(dot(N, H), 0.0), u_shininess);
-			vec4 specular = u_specularProduct * Ks;
+				gl_Position = u_projMatrix * u_mvMatrix * vec4(a_vertexPosition, 1.0);
 
-			gl_Position = u_projMatrix * u_mvMatrix * vec4(a_vertexPosition, 1.0);
-
-			frontColor = ambient + diffuse + specular;
-			frontColor.a = 1.0;
-
-			float Kdb = max(dot(L, -N), 0.0);
-			vec4 diffuseb = Kdb * u_diffuseProduct;
-			backColor = ambient + diffuseb + specular;
-		}
-  	</script>
-
-  	<script id="fragment-shader" type="x-shader/x-fragment">
-  		precision mediump float;
-  		varying vec4 frontColor;
-		varying vec4 backColor;
-
-  		void main() {
-  		  	if (!gl_FrontFacing) {
-				gl_FragColor = frontColor;
+				fColor = ambient + diffuse + specular;
 			}
-			else {
-				gl_FragColor = backColor;
-			}
-  		}
-  	</script>
+		</script>
 
-    <script type="text/javascript" src="Common/webgl-utils.js"></script>
-  	<script type="text/javascript" src="Common/initShaders.js"></script>
-  	<script type="text/javascript" src="Common/MV.js"></script>
-    <script type="text/javascript" src="geometry.js"></script>
-  	<script type="text/javascript" src="box_flower.js"></script>
-  </head>
+		<script id="fragment-shader" type="x-shader/x-fragment">
+			precision mediump float;
+			varying vec4 fColor;
+
+			void main() {
+				gl_FragColor = fColor;
+			}
+		</script>
+
+		<script type="text/javascript" src="Common/webgl-utils.js"></script>
+		<script type="text/javascript" src="Common/initShaders.js"></script>
+		<script type="text/javascript" src="Common/MV.js"></script>
+		<script type="text/javascript" src="geometry.js"></script>
+		<script type="text/javascript" src="box_flower.js"></script>
+	</head>
 	<body>
 		<div style="font-family:verdana;">
-      <canvas id="gl-canvas" width="512" height="512" style="background-color : #000000;">
-  			Oops ... your browser doesn't support the HTML5 canvas element
-  		</canvas>
-      <table style "width:50%">
-        <tr>
-        <th>fov</th>
-        <td><input id="fov-slider" type="range" min="10" max="100" step="1" value="60"/></td>
-        </tr>
-      </table>
+			<canvas id="gl-canvas" width="512" height="512" style="background-color : #000000;">
+				Oops ... your browser doesn't support the HTML5 canvas element
+			</canvas>
 		</div>
 	</body>
 </html>
