@@ -42,7 +42,7 @@ var u_projMatrix;
 var shininess = 30;
 var time = 0.625;
 var delta_t = 0.01;
-var sz = 0.6;
+var sz = 0.55;
 var pos = [0, 0];
 var speed_r = 100;
 var speed_x = -0.006;
