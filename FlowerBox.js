@@ -1,4 +1,7 @@
-// Kevin Shannon
+// Author: Kevin Shannon
+// Credits to Dianne Hansford for providing the Common libraries
+// and to Jonas Wagner for his help with the geometry of the FlowerBox.
+
 var canvas;
 var gl;
 
@@ -35,6 +38,18 @@ var u_mvMatrix;
 var projMatrix;
 var u_projMatrix;
 
+// Magic Variables
+var shininess = 30;
+var time = 0.625;
+var delta_t = 0.01;
+var sz = 0.6;
+var pos = [0, 0];
+var speed_r = 100;
+var speed_x = -0.006;
+var speed_y = 0.006;
+var max_x = 2.1
+var max_y = 1.7
+
 // Light properties
 class Light {
   constructor(position, ambient, diffuse, specular) {
@@ -52,15 +67,7 @@ var light = new Light(
   vec4(0.5, 0.5, 0.5, 1.0)
 );
 
-// Magic Variables
-var shininess = 30;
-var time = 0.625;
-var delta_t = 0.0232;
-var sz = 0.6;
-var pos = [0, 0];
-var speed_x = -0.012;
-var speed_y = 0.012;
-
+// Materials
 class Material {
   constructor(ambient, diffuse, specular) {
     this.ambient = ambient;
@@ -207,14 +214,15 @@ window.onload = function init() {
 var render = function() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+  // Time and position calculations
   time += delta_t
   pos[0] += speed_x
   pos[1] += speed_y
 
-  if (Math.abs(pos[0]) > 2.1) {
+  if (Math.abs(pos[0]) > max_x) {
     speed_x = -speed_x;
   }
-  if (Math.abs(pos[1]) > 1.75) {
+  if (Math.abs(pos[1]) > max_y) {
     speed_y = -speed_y;
   }
   
@@ -237,10 +245,11 @@ var render = function() {
   pjMatrix = perspective(perspProj.fov, perspProj.aspect, perspProj.near, perspProj.far);
   gl.uniformMatrix4fv(u_projMatrix, false, flatten(pjMatrix));
 
+  // mvMatrix building
   var mvFoundation = lookAt(viewer.eye, viewer.at, viewer.up);
   mvFoundation = mult(mvFoundation, scalem(sz/aspect_ratio, sz, sz));
-  mvFoundation = mult(mvFoundation, rotateY(50*time));
-  mvFoundation = mult(mvFoundation, rotateZ(50*time));
+  mvFoundation = mult(mvFoundation, rotateY(speed_r*time));
+  mvFoundation = mult(mvFoundation, rotateZ(speed_r*time));
   for (face in faces) {
     // Orientate Face
     mvMatrix = mult(mvFoundation, rotateX(faces[face].orientation[0]));
