@@ -17,7 +17,7 @@ class Surface {
   }
 }
 
-var subdiv = 50;
+var subdiv = 13;
 var square = new Surface(-1, 1, -1, 1, subdiv, subdiv)
 
 function generate_geometry(surface, time) {
