@@ -17,7 +17,8 @@ class Surface {
   }
 }
 
-var square = new Surface(-1, 1, -1, 1, 13, 13)
+var subdiv = 50;
+var square = new Surface(-1, 1, -1, 1, subdiv, subdiv)
 
 function generate_geometry(surface, time) {
   normals = [];
@@ -78,6 +79,7 @@ function generate_geometry(surface, time) {
 }
 
 function generate_indices(surface) {
+  indices = [];
   for (var i = 0; i < surface.x_divisions-1; i++) {
     for (var j = 0; j < surface.y_divisions-1; j++) {
       // A square is made from an upper and lower triangle

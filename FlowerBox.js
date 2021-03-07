@@ -208,6 +208,18 @@ window.onload = function init() {
   u_specularProduct = gl.getUniformLocation(program, "u_specularProduct");
   u_shininess = gl.getUniformLocation(program, "u_shininess");
 
+  document.getElementById("gl-canvas").onmousedown = function () {
+    if (subdiv === 13) {
+      subdiv = 50;
+    } else {
+      subdiv = 13;
+    }
+    shape = new Surface(-1, 1, -1, 1, subdiv, subdiv);
+    generate_indices(shape);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(indices), gl.STATIC_DRAW);
+  }
+
   render();
 }
 
